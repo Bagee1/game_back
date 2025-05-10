@@ -1,7 +1,8 @@
 fastapi
 uvicorn[standard]
 python-multipart
-opencv-python
 numpy
 websockets
 mediapipe
+opencv-python     
+tensorflow  

@@ -1,8 +1,6 @@
-# README.md
+## Төсөл: Real-Time Emotion Recognition WebSocket Service
 
-## Төсөл: Real-Time Mouth Detection WebSocket Service
-
-Энэхүү төсөл нь FastAPI болон OpenCV-ийн Haar Cascade эсвэл MediaPipe FaceMesh-ийг ашиглан ам нээх үйлдлийг real-time горимд илрүүлэн WebSocket руу JSON хэлбэрээр буцаадаг сервер юм. Next.js эсвэл бусад WebSocket клиентүүдтэй хосолсон Dinora мэт тоглоомын front-end-д ашиглахад тохиромжтой.
+Энэхүү төсөл нь FastAPI болон OpenCV (Haar Cascade) болон/эсвэл TensorFlow/Keras моделийг ашиглан real-time горимд нүүрний сэтгэгдэл (emotion) илрүүлэн WebSocket руу JSON хэлбэрээр буцаадаг сервер юм. Next.js эсвэл бусад WebSocket клиенттэй хослуулан front-end-д ашиглахад тохиромжтой.
 
 ### Файлын бүтэц
 
@@ -10,19 +8,22 @@
 game_api/                       # Төслийн үндсэн фолдер
 ├─ venv/                        # Python виртуал орчин (коммит хийхгүй)
 ├─ face_api/                    # FastAPI серверийн модуль
-│   └─ app.py                   # WebSocket endpoint бүхий код
-├─ test_realtime.py             # Real-time WebSocket тест клиент (Python скрипт)
-├─ test_ws.py                   # WebSocket нэг кадр илгээх тест клиент
-├─ test.jpg                     # Туршилтын зураг (нүүртэй sample)
+│   ├─ app.py                   # Ам нээх detection WebSocket код
+│   └─ facial_exp_api.py        # Emotion recognition WebSocket код
+├─ test_ws.py                   # Нэг кадрын тест клиент (Python скрипт)
+├─ test_realtime.py             # Үйлдлийн real-time тест клиент (Python скрипт)
+├─ test_emotion_ws.py           # Нэг кадрын emotion тест клиент (Python скрипт)
+├─ test_emotion_realtime.py     # Emotion real-time тест клиент (Python скрипт)
+├─ test_face.jpg                # Туршилтын нүүртэй зураг
 ├─ requirements.txt             # Хамаарлуудын жагсаалт
-└─ .gitignore                   # venv/, __pycache__, *.pyc  файлуудыг агуулахгүй
+└─ .gitignore                   # venv/, __pycache__, *.pyc файлуудыг агуулахгүй
 ```
 
 ### Шаардлага
 
-- Python 3.11+
-- Windows (DirectShow) эсвэл Ubuntu (WSL давхарлахгүй) орчин
-- Веб камер (камерын индекс зөв тохируулах)
+- Python 3.8+ (3.11+ санал болгож байна)
+- Windows эсвэл Linux/WSL орчин
+- Вэб камер
 
 ### Орчны бэлтгэл
 
@@ -30,7 +31,7 @@ game_api/                       # Төслийн үндсэн фолдер
 
    ```bash
    cd C:/Projects/game_api
-   python -m venv venv         # Windows
+   python -m venv venv        # Windows
    .\venv\Scripts\activate  # PowerShell
    # эсвэл bash: source venv/bin/activate
    ```
@@ -52,60 +53,100 @@ game_api/                       # Төслийн үндсэн фолдер
 ```
 fastapi
 uvicorn[standard]
-python-multipart
 opencv-python
+mediapipe        # хэрвээ FaceMesh ашиглах бол
+tensorflow       # Keras модель inference
 numpy
-websockets
-mediapipe  # Хэрвээ MediaPipe FaceMesh сонгосон бол
+websockets       # тест клиентэд
 ```
 
 ### Сервер ажиллуулах
 
 ```bash
-uvicorn face_api.app:app --reload --host 0.0.0.0 --port 8000
+uvicorn face_api.facial_exp_api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-- Үүний дараа `http://localhost:8000/docs` гэж ороход Swagger UI харагдана.
-- WebSocket endpoint: `ws://localhost:8000/ws/mouth`
-
-### Real-time тест
-
-```bash
-python test_realtime.py
-```
-
-- Камерын цонх дээр “MOUTH OPEN”/“MOUTH CLOSED” гэж real-time бичигдэнэ.
-- `q` товч дарахад зогсоно.
+- Дараа нь `http://localhost:8000/docs` гэж ороход Swagger UI харагдана.
+- WebSocket endpoint: `ws://localhost:8000/ws/emotion`
 
 ### Нэг кадрын тест
 
 ```bash
-python test_ws.py
+python test_emotion_ws.py
 ```
 
-- `test_ws.py` скрипт нь нэг кадрын зураг (`test.jpg`) илгээж, серверээс JSON хариу авна.
+- `test_emotion_ws.py` скрипт нь `test_face.jpg` файлыг сервер рүү илгээж, JSON хариу авна.
 
-### Камерын индекс тохируулах (Windows)
-
-`test_realtime.py` дотор:
-
-```python
-cap = cv2.VideoCapture(<индекс>, cv2.CAP_DSHOW)
-```
-
-- Индексийг олохын тулд `find_camera.py` хутгаар:
+### Real-time тест
 
 ```bash
-python find_camera.py
+python test_emotion_realtime.py
 ```
 
-- Олсон индексээр `cap` үүсгэ.
+- Камерын кадр бүрийг сервер рүү явуулж, цонх дээр ангилал + магадлалыг харуулна.
+- `q` товч дарахад зогсоно.
 
-### Дагалдах файлууд
+### Client-side кодууд (жишээ)
 
-- `.gitignore`: `venv/`, `__pycache__/`, `*.pyc`
-- `README.md`: Энэ файл
+- HTML/JS canvas + WebSocket ашиглан кадр илгээх жишээ фронтенд кодыг өмнөх чат дээр үзүүлсэн.
+
+### .gitignore
+
+```
+venv/
+__pycache__/
+*.pyc
+```
 
 ---
 
-Ингэж та энэхүү төсөлдөө Python виртуал орчин, FastAPI WebSocket сервер болон real-time mouth-open илрэлт хийх орчныг бүрдүүлж чадна. Амжилт хүсье!
+### Өнөөдөр хийсэн зүйлс
+
+- WebSocket `/ws/mouth` болон `/ws/emotion` endpoint-уудыг кодчилж тестэлсэн
+- Python real-time болон нэг кадрын тест скриптүүдийг (test_ws.py, test_realtime.py, test_emotion_ws.py, test_emotion_realtime.py) боловсруулсан
+- `facial_exp_api.py` дотор MODEL_PATH тохиргоо, Haarcascade болон TensorFlow/Keras моделийг нэгтгэн ажиллуулах тохиргоог нэмж оруулсан
+- README.md-д файлын бүтэц, шаардлага, тест зааварчилгаа болон ажиллуулах зааврыг шинэчлэн оруулсан
+
+---
+
+### Кодын тайлбар
+
+- **face_api/app.py**
+
+  - Ам нээх илрүүлэлт WebSocket endpoint (`/ws/mouth`).
+  - Клиентээс JPEG байтууд авч, OpenCV Haarcascade эсвэл MediaPipe FaceMesh ашиглан ам нээлт эсэхийг тооцоолоод `{ "mouth_open": true|false }` JSON-ээр буцаана.
+
+- **face_api/facial_exp_api.py**
+
+  - Нүүрний сэтгэгдэл (emotion) recognition WebSocket endpoint (`/ws/emotion`).
+  - Кадрыг grayscale болгон Haarcascade-нүүрний байршил олж, TensorFlow/Keras CNN модель дээр бүх ангиллын магадлал болон хамгийн өндөр ангийг `{ "predictions": {...}, "top": {"label":..., "probability":...} }` хэлбэрээр буцаана.
+
+- **test_ws.py**
+
+  - Нэг кадрын тест клиент.
+  - `test_face.jpg` файлыг JPEG болгон WebSocket руу илгээж, серверээс ирсэн JSON хариуг консолд хэвлэнэ.
+
+- **test_realtime.py**
+
+  - Ам нээх real-time detection тест клиент.
+  - Вэбкамераас кадр авч `/ws/mouth` руу явуулан "MOUTH OPEN"/"MOUTH CLOSED" текстийг кадрийн дээр харуулна.
+
+- **test_emotion_ws.py**
+
+  - Нэг кадрын emotion тест клиент.
+  - `test_face.jpg`-г `/ws/emotion` рүү илгээж JSON хариуг консолд хэвлэнэ.
+
+- **test_emotion_realtime.py**
+
+  - Emotion real-time тест клиент.
+  - Вэбкамераас кадр авч `/ws/emotion` рүү явуулан real-time recognition дүнг консолд болон цонхонд харуулна.
+
+- **requirements.txt**
+
+  - Төслийн бүх Python хамаарлуудыг жагсаасан.
+
+- **.gitignore**
+
+  - Виртуал орчин (venv/), кэш (**pycache**/) болон (.pyc) файлуудыг Git-д агуулахгүй.
+
+---
