@@ -1,0 +1,53 @@
+
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Баатар - Тоглоом</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-bg: #000;
+            --secondary-bg: #111;
+            --tertiary-bg: #222;
+            --accent-bg: #333;
+            --primary-text: #fff;
+            --secondary-text: #aaa;
+            --tertiary-text: #666;
+            --border-color: #444;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            line-height: 1.6;
+        }   
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="score-card">
+            <span>HI</span>
+            <span class="high-score"></span>
+            <span class="score"></span>
+        </div>
+        <div class="player"></div>
+        <div class="obstacle"></div>
+        <div class="restart-game">
+            <div class="content">
+                <span class="text">RESTART</span>
+                <button onclick="restart()" class="btn-reset-game"></button>
+            </div>
+        </div>
+        <button id="toggleMouthDetection" onclick="toggleMouthDetection()">Enable Mouth Control</button>
+        <div id="cameraFeedback" class="camera-feedback"></div>
+    </div>
+    <script src="./app.js"></script>
+</body>
+</html>
