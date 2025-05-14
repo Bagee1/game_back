@@ -152,6 +152,11 @@ function loadNextEmoji() {
 
     void emojiContainer.offsetWidth; // Force reflow
 
+    // BG зураг солих логик
+    if (emojiIndex === 2) { // 0=emgen, 1=uvgun, 2=tuulai
+        gameContainerElement.style.backgroundImage = "url('./assets/image 2.png')";
+    }
+
     console.log('emoji appended', emotionMap[currentEmojiEmotion]);
     emojiIndex = (emojiIndex + 1) % emojiKeys.length;
 }
