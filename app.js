@@ -1,77 +1,62 @@
-const playerElement = document.querySelector('.player');
+const playerElement = document.querySelector('.unhruush');
 const obstacleElement = document.querySelector('.obstacle');
 const scoreElement = document.querySelector('.score-card .score');
 const highScoreElement = document.querySelector('.score-card .high-score');
 const restartGameElement = document.querySelector('.restart-game');
 const gameContainerElement = document.querySelector('.game-container');
 const cameraFeedbackElement = document.querySelector('#cameraFeedback');
-const toggleMouthBtn = document.querySelector('#toggleMouthDetection');
 
-const OBSTACLE_SIZES = ['xs','s','m','l'];
+const emotionToEmojiMap = {
+    'Happy': './assets/bayrlah_unhruush.png',
+    'Angry': './assets/uurlah_unhruush.png',
+    'Sad': './assets/uilah_unhruush.png',
+    'Surprised': './assets/gaihal_unhruush.png',
+    'Fear': './assets/aidas_unhruush.png',
+    'Disgust': './assets/jigshil_unhruush.png'
+};
+
+const emotionMap = {
+    'Happy': './assets/emgen.png', 
+    'Angry': './assets/uvgun.png', 
+    'Surprised': './assets/tuulai.png', 
+    'Sad': './assets/chono.png', 
+    'Fear': './assets/baiwgai.png',
+    'Disgust': './assets/uneg.png' 
+};
 
 // Face detection variables
 let wsConnection = null;
-let mouthOpen = false;
-let mouthDetectionActive = false;
+let faceDetectionActive = false;
 let videoStream = null;
-
-/**
- * JUMP CONTROLS
- */
-function addJumpListener() {
-    document.addEventListener('keydown', event => {
-        if(event.key === ' ' || event.key === 'ArrowUp') {
-            jump();
-        }
-    });
-}
-
-let jumping = false;
-function jump() {
-    if(jumping) {
-        return;
-    }
-
-    jumping = true;
-    playerElement.classList.add('jump');
-    setTimeout(() => {
-        playerElement.classList.remove('jump');
-        jumping = false;
-    }, 1200);
-}
 
 /**
  * FACE DETECTION
  */
-function connectToMouthDetection() {
-    // Change this URL to match your FastAPI server address
-    wsConnection = new WebSocket('ws://localhost:8000/ws/mouth');
-    
+function connectToFaceDetection() {
+    wsConnection = new WebSocket('ws://localhost:8000/ws/emotion');
     wsConnection.onopen = () => {
-        console.log('Connected to mouth detection API');
-        mouthDetectionActive = true;
-        toggleMouthBtn.textContent = 'Disable Mouth Control';
+        console.log('Connected to face detection API');
+        faceDetectionActive = true;
         startVideoStream();
     };
-    
     wsConnection.onclose = () => {
-        console.log('Disconnected from mouth detection API');
-        mouthDetectionActive = false;
-        toggleMouthBtn.textContent = 'Enable Mouth Control';
+        console.log('Disconnected from face detection API');
+        faceDetectionActive = false;
     };
-    
     wsConnection.onerror = (error) => {
         console.error('WebSocket error:', error);
-        mouthDetectionActive = false;
-        toggleMouthBtn.textContent = 'Enable Mouth Control';
+        faceDetectionActive = false;
     };
-    
-    wsConnection.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        mouthOpen = data.mouth_open;
-        
-        if (mouthOpen) {
-            jump();
+    wsConnection.onmessage = (message) => {
+        try {
+            const data = JSON.parse(message.data);
+            const topEmotion = data?.top?.label;
+            console.log('Detected emotion:', topEmotion, data); // Add this line
+            if (topEmotion && emotionToEmojiMap[topEmotion]) {
+                updateUnhruushFace(topEmotion);
+            }
+        } catch (err) {
+            console.error('Emotion parse error:', err);
         }
     };
 }
@@ -84,13 +69,9 @@ function startVideoStream() {
                 const video = document.createElement('video');
                 video.srcObject = stream;
                 video.play();
-                
-                // Add video to feedback element
                 cameraFeedbackElement.innerHTML = '';
                 cameraFeedbackElement.appendChild(video);
                 cameraFeedbackElement.style.display = 'block';
-                
-                // Send frames to the WebSocket server
                 const sendFrame = () => {
                     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
                         const canvas = document.createElement('canvas');
@@ -98,27 +79,28 @@ function startVideoStream() {
                         canvas.height = video.videoHeight;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(video, 0, 0);
-                        
                         canvas.toBlob((blob) => {
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                                wsConnection.send(reader.result);
-                            };
-                            reader.readAsArrayBuffer(blob);
+                            if (blob) { // Only proceed if blob is not null
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                    wsConnection.send(reader.result);
+                                };
+                                reader.readAsArrayBuffer(blob);
+                            } else {
+                                // Optionally log or handle the null blob case
+                                // console.warn('Canvas toBlob returned null');
+                            }
                         }, 'image/jpeg', 0.7);
                     }
-                    
-                    if (mouthDetectionActive) {
+                    if (faceDetectionActive) {
                         setTimeout(sendFrame, 100); // Send every 100ms
                     }
                 };
-                
                 sendFrame();
             })
             .catch(function(error) {
                 console.error('Camera error:', error);
                 alert('Could not access camera. Please check permissions.');
-                toggleMouthDetection();
             });
     } else {
         console.error('getUserMedia not supported');
@@ -134,49 +116,67 @@ function stopVideoStream() {
     cameraFeedbackElement.style.display = 'none';
 }
 
-function toggleMouthDetection() {
-    if (mouthDetectionActive) {
-        // Disable mouth detection
-        if (wsConnection) {
-            wsConnection.close();
-        }
-        mouthDetectionActive = false;
-        toggleMouthBtn.textContent = 'Enable Mouth Control';
-    } else {
-        // Enable mouth detection
-        connectToMouthDetection();
+function handleEmojiCollision() {
+    const currentEmoji = document.querySelector('.Emoji');
+
+    if (currentEmoji && currentEmoji.dataset.type === 'emgen') {
+        playerElement.style.backgroundImage = `url('./assets/smile_unhruush.png')`;
+        currentEmoji.remove(); // Remove emgen from screen
+        emojiIndex++; // Next emoji
+        loadNextEmoji(); // You should implement this
     }
 }
+let emojiIndex = 0;
+const emojiKeys = ['Happy', 'Angry', 'Surprised', 'Sad', 'Fear', 'Disgust'];
+let currentEmojiEmotion = emojiKeys[emojiIndex];
 
-/**
- * COLLISION DETECTION
- */
-let collisionInterval;
-function monitorCollision() {
-    collisionInterval = setInterval(() => {
-        if(isCollision()) {
-            checkForHighScore();
-            stopGame();
-        }
-    }, 10);
+function loadNextEmoji() {
+    console.log('loadNextEmoji called');
+    
+    const emojiContainer = document.querySelector('.emoji');
+    emojiContainer.innerHTML = '';
+;
+    currentEmojiEmotion = emojiKeys[emojiIndex];
+    emojiContainer.style.backgroundImage = `url(${emotionMap[currentEmojiEmotion]})`;
+    emojiContainer.style.backgroundSize = 'contain';
+    emojiContainer.style.backgroundRepeat = 'no-repeat';
+    emojiContainer.style.backgroundPosition = 'left 70% bottom';
+    emojiContainer.style.width = '160px';
+    emojiContainer.style.height = '160px';
+    emojiContainer.style.position = 'absolute';
+    emojiContainer.style.left = '70%';
+    emojiContainer.style.bottom = '0';
+    emojiContainer.style.zIndex = '2';
+
+    // Animation дахин trigger хийх
+
+    void emojiContainer.offsetWidth; // Force reflow
+
+    console.log('emoji appended', emotionMap[currentEmojiEmotion]);
+    emojiIndex = (emojiIndex + 1) % emojiKeys.length;
 }
 
-const LEFT_BUFFER = 50;
-function isCollision() {
-    const playerClientRect = playerElement.getBoundingClientRect();
-    const playerL = playerClientRect.left;
-    const playerR = playerClientRect.right;
-    const playerB = playerClientRect.bottom;
-    
-    const obstacleClientRect = obstacleElement.getBoundingClientRect();
-    const obstacleL = obstacleClientRect.left;
-    const obstacleR = obstacleClientRect.right;
-    const obstacleT = obstacleClientRect.top;
+function updateUnhruushFace(emotion) {
+    const img = emotionToEmojiMap[emotion];
+    if (img) {
+        playerElement.style.backgroundImage = `url(${img})`;
 
-    const xCollision = (obstacleR - LEFT_BUFFER) > playerL && obstacleL < playerR;
-    const yCollision = playerB > obstacleT;
-
-    return xCollision && yCollision;
+        // Бүх emoji-г одоогийн emotion-тай таарвал дараагийн emoji руу шилжүүлнэ
+        if (emotion === currentEmojiEmotion) {
+            setScore(score + 10); // Царай таних болгонд 10 оноо нэмнэ
+            const emojiContainer = document.querySelector('.emoji');
+            if (emojiContainer) {
+                // Эхлээд emoji-г алга болгоно
+                emojiContainer.classList.remove('move');
+                emojiContainer.style.opacity = '0';
+                // 300ms дараа дараагийн emoji-г баруун талаас linear байдлаар оруулна
+                setTimeout(() => {
+                    emojiContainer.style.opacity = '1';
+                    loadNextEmoji();
+                }, 300);
+            }
+        }
+    }
 }
 
 /**
@@ -187,12 +187,7 @@ function setScore(newScore) {
     scoreElement.innerHTML = score = newScore;
 }
 
-let scoreInterval;
-function countScore() {
-    scoreInterval = setInterval(() => {
-        setScore(score + 1);
-    }, 100);
-}
+
 
 let highscore = localStorage.getItem('highscore') || 0;
 function setHighScore(newScore) {
@@ -206,22 +201,12 @@ function checkForHighScore() {
     }
 }
 
+
+
 /**
- * OBSTACLE SYSTEM
- */
-function getRandomObstacleSize() {
-    const index = Math.floor(Math.random() * (OBSTACLE_SIZES.length - 1));
-    return OBSTACLE_SIZES[index];
-}
-
-let changeObstacleInterval;
-function randomiseObstacle() {
-    changeObstacleInterval = setInterval(() => {
-        const obstacleSize = getRandomObstacleSize();
-        obstacleElement.className = `obstacle obstacle-${obstacleSize}`;
-    }, 3000);
-}
-
+ * EMOJI SYSTEM
+//todo emoji дарааллаараа буюу index -ээрээ ба дэлгэц дээр гарч ирэх ёстой хэрвээ Emoji таавал автоматаар дараагийнх солигдож байх ёстой
+let emojiIndex = 0;
 /**
  * GAME CONTROL
  */
@@ -242,11 +227,10 @@ function restart() {
  * INITIALIZE GAME
  */
 function main() {
-    addJumpListener();
-    monitorCollision();
-    countScore();
     setHighScore(highscore);
-    randomiseObstacle();
-};
+    connectToFaceDetection();
+    loadNextEmoji(); // Эхний emoji гаргах
+}
+
 
 main();
