@@ -18,14 +18,14 @@ app.add_middleware(
 # 1. Emotion recognition модел болон Haarcascade ачаалж байна
 
 BASE_DIR = os.path.dirname(__file__)                             # …\game_api\face_api
-MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "model", "facial_expression_model.h5"))
+MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "model", "model.h5"))  # …\game_api\model\model.h5
 print("Loading model from:", MODEL_PATH)
 CASCADE_PATH = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
 model = load_model(MODEL_PATH)
 face_cascade = cv2.CascadeClassifier(CASCADE_PATH)
 
 # 2. Ангиллын шошгууд
-class_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
+class_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprised']
 
 async def detect_emotion(frame: np.ndarray, threshold: float = 0.0) -> dict:
     """
@@ -53,11 +53,18 @@ async def detect_emotion(frame: np.ndarray, threshold: float = 0.0) -> dict:
     top_label = class_labels[top_i]
     top_prob = float(preds[top_i])
 
+    # if top_prob < 0.51: 
+    #     return {"error": "uncertain_prediction"}
+    # else:
+    #     return {
+    #         "predictions": probs,
+    #         "top": {"label": top_label, "probability": top_prob}
+    #     }
     return {
-        "predictions": probs,
-        "top": {"label": top_label, "probability": top_prob}
-    }
-
+            "predictions": probs,
+            "top": {"label": top_label, "probability": top_prob}
+        }
+        
 @app.websocket("/ws/emotion")
 async def emotion_ws(websocket: WebSocket):
     await websocket.accept()

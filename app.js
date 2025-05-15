@@ -116,74 +116,77 @@ function stopVideoStream() {
     cameraFeedbackElement.style.display = 'none';
 }
 
-function handleEmojiCollision() {
-    const currentEmoji = document.querySelector('.Emoji');
-
-    if (currentEmoji && currentEmoji.dataset.type === 'emgen') {
-        playerElement.style.backgroundImage = `url('./assets/smile_unhruush.png')`;
-        currentEmoji.remove(); // Remove emgen from screen
-        emojiIndex++; // Next emoji
-        loadNextEmoji(); // You should implement this
-    }
-}
 let emojiIndex = 0;
 const emojiKeys = ['Happy', 'Angry', 'Surprised', 'Sad', 'Fear', 'Disgust'];
 let currentEmojiEmotion = emojiKeys[emojiIndex];
 
 function loadNextEmoji() {
-    console.log('loadNextEmoji called');
-    
     const emojiContainer = document.querySelector('.emoji');
-    emojiContainer.innerHTML = '';
-;
-    currentEmojiEmotion = emojiKeys[emojiIndex];
-    emojiContainer.style.backgroundImage = `url(${emotionMap[currentEmojiEmotion]})`;
-    emojiContainer.style.backgroundSize = 'contain';
-    emojiContainer.style.backgroundRepeat = 'no-repeat';
-    emojiContainer.style.backgroundPosition = 'left 70% bottom';
-    emojiContainer.style.width = '160px';
-    emojiContainer.style.height = '160px';
-    emojiContainer.style.position = 'absolute';
-    emojiContainer.style.left = '70%';
-    emojiContainer.style.bottom = '0';
-    emojiContainer.style.zIndex = '2';
+    emojiContainer.style.opacity = '0'; // 1. Fade out
+    emojiContainer.classList.remove('enter'); // remove previous animation class if any
+    void emojiContainer.offsetWidth; // force reflow for re-adding animation
 
-    // Animation дахин trigger хийх
+    // 1.5 секундийн дараа backgroundImage болон index-г солих
+    setTimeout(() => {
+        currentEmojiEmotion = emojiKeys[emojiIndex];
+        emojiContainer.style.backgroundImage = `url(${emotionMap[currentEmojiEmotion]})`;
+        emojiContainer.classList.add('enter'); // add animation class for slide-in
+        emojiContainer.style.opacity = '1'; // Fade in
 
-    void emojiContainer.offsetWidth; // Force reflow
+        // BG зураг солих логик
+        if (emojiIndex === 2) {
+            gameContainerElement.style.backgroundImage = "url('./assets/image 2.png')";
+        }
+        if (emojiIndex == 3) {
+            gameContainerElement.style.backgroundImage = "url('./assets/image 3.png')";
+        }
+        if (emojiIndex == 4) {
+            gameContainerElement.style.backgroundImage = "url('./assets/image 4.png')";
+        }
 
-    // BG зураг солих логик
-    if (emojiIndex === 2) { // 0=emgen, 1=uvgun, 2=tuulai
-        gameContainerElement.style.backgroundImage = "url('./assets/image 2.png')";
+        setTimeout(() => {
+            emojiContainer.classList.remove('enter'); // remove animation class after 1.5s
+            emojiIndex = (emojiIndex + 1) % emojiKeys.length;
+        }, 1500);
+    }, 1500); // 1.5s fade out дараа зураг солих
+}
+
+function showWinModal() {
+    stopGame();
+    const winModal = document.getElementById('winModal');
+    if (winModal) {
+        winModal.style.display = 'flex';
     }
-
-    console.log('emoji appended', emotionMap[currentEmojiEmotion]);
-    emojiIndex = (emojiIndex + 1) % emojiKeys.length;
 }
 
 function updateUnhruushFace(emotion) {
     const img = emotionToEmojiMap[emotion];
     if (img) {
-        playerElement.style.backgroundImage = `url(${img})`;
+        playerElement.style.transition = 'opacity 0.5s ease';
+        playerElement.style.opacity = '0'; // Fade out
+        setTimeout(() => {
+            playerElement.style.backgroundImage = `url(${img})`;
+            playerElement.style.opacity = '1'; // Fade in
+        }, 300);
 
-        // Бүх emoji-г одоогийн emotion-тай таарвал дараагийн emoji руу шилжүүлнэ
         if (emotion === currentEmojiEmotion) {
-            setScore(score + 10); // Царай таних болгонд 10 оноо нэмнэ
+            setScore(score + 10);
+            correctEmojisCount++;
+            if (correctEmojisCount === emojiKeys.length) {
+                setTimeout(() => {
+                    showWinModal();
+                }, 500);
+            }
             const emojiContainer = document.querySelector('.emoji');
             if (emojiContainer) {
-                // Эхлээд emoji-г алга болгоно
-                emojiContainer.classList.remove('move');
                 emojiContainer.style.opacity = '0';
-                // 300ms дараа дараагийн emoji-г баруун талаас linear байдлаар оруулна
                 setTimeout(() => {
-                    emojiContainer.style.opacity = '1';
                     loadNextEmoji();
                 }, 300);
             }
         }
     }
 }
-
 /**
  * SCORE SYSTEM
  */

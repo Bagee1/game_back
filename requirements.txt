@@ -3,6 +3,8 @@ uvicorn[standard]
 python-multipart
 numpy
 websockets
+deepface
 mediapipe
 opencv-python     
 tensorflow  
+tf-keras

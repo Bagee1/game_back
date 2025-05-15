@@ -55,22 +55,28 @@ body {
     position: absolute;
     bottom: 0;
     left: 70%;
-    animation: move 3s linear 1;
     background-image: url('./assets/emgen.png');
     background-size: contain;
     z-index: 2;
     transition: opacity 0.3s linear;
 }
 
-@keyframes move {
+.emoji.enter {
+    animation: emoji-enter 1.5s linear forwards;
+}
+
+@keyframes emoji-enter {
     0% {
         left: 100%;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
     }
     100% {
         left: 70%;
-        animation-timing-function: steps(1, end);
+        opacity: 1;
     }
-
 }
 
 .score-card {
@@ -151,4 +157,28 @@ align-items: end;
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.win-modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.95);
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.win-content {
+    color: #fff;
+    font-size: 3rem;
+    font-weight: bold;
+    background: rgba(0,0,0,0.8);
+    padding: 40px 60px;
+    border-radius: 20px;
+    box-shadow: 0 0 40px #000;
+    text-align: center;
+    letter-spacing: 2px;
 }
