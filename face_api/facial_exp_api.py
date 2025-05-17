@@ -18,7 +18,7 @@ app.add_middleware(
 # 1. Emotion recognition модел болон Haarcascade ачаалж байна
 
 BASE_DIR = os.path.dirname(__file__)                             # …\game_api\face_api
-MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "model", "model.h5"))  # …\game_api\model\model.h5
+MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "model", "facial_expression_model.h5"))  # …\game_api\model\facial_exp
 print("Loading model from:", MODEL_PATH)
 CASCADE_PATH = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
 model = load_model(MODEL_PATH)

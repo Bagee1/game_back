@@ -15,6 +15,8 @@
     background-image: url('./assets/image\ 1.png');
     background-size: contain;
     animation: bg-move 30s linear infinite;
+    transition: background-image 0.5s linear, opacity 0.5s linear;
+    opacity: 1;
 }
 
 @keyframes bg-move {
