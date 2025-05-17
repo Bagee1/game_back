@@ -142,3 +142,7 @@ __pycache__/
 - README.md-д файлын бүтэц, шаардлага, тест зааварчилгаа болон ажиллуулах зааврыг шинэчлэн оруулсан
 
 ---
+Хэрвээ нэг командоор бүгдийг зэрэг ажиллуулахыг хүсвэл PowerShell-д зориулсан дараах скрипт ашиглаж болно:
+uvicorn face_api.app:app --host 0.0.0.0 --port 8001
+uvicorn face_api.facial_exp_api:app --host 0.0.0.0 --port 8002
+uvicorn api_gateway:app --host 0.0.0.0 --port 8000
